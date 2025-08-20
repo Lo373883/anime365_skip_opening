@@ -4,14 +4,12 @@
 // @version      1.0
 // @description  Автоматически пропускает заставку на Anime365
 // @author       ildys2.0
-// @match       https://smotret-anime.org/*
-// @match       https://anime365.ru/*
-// @match       https://anime-365.ru/*
-// @match       https://hentai365.ru/*
-// @match       https://smotret-anime.online/*
-// @match       https://smotret-anime.com/*
-// @grant        none
-// @license      MIT
+// @match        https://smotret-anime.com/*
+// @match        https://smotret-anime.org/*
+// @match        https://anime365.ru/*
+// @match        https://anime-365.ru/*
+// @match        https://hentai365.ru/*
+// @match        https://smotret-anime.online/*
 // ==/UserScript==
 
 (function() {
