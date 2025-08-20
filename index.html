@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Установка скрипта Anime365 Link</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .script-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        .install-button {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 10px 0;
+            transition: background-color 0.2s;
+        }
+        .install-button:hover {
+            background-color: #2980b9;
+        }
+        .button-group {
+            margin: 20px 0;
+        }
+        .button-group button {
+            padding: 8px 15px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .button-group button:hover {
+            background-color: #e9ecef;
+        }
+        .permissions {
+            background-color: #fff3cd;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+        }
+        .permissions ul {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #6c757d;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Установка скрипта Anime365 Link, 0.1.3</h1>
+    
+    <div class="script-info">
+        <p>Добавляет ссылку на Anime365 на страницы Shikimori под постером аниме.</p>
+        <p>Ссылка на скрипт:</p>
+        <p><strong><a href="https://github.com/DarkHole1/userscripts/raw/main/anime365-links.user.js" id="script-link">https://github.com/DarkHole1/userscripts/raw/main/anime365-links.user.js</a></strong></p>
+    </div>
+    
+    <a href="#" class="install-button" id="install-button">Установить (Ctrl+Enter)</a>
+    
+    <div class="permissions">
+        <p><strong>Требуемые разрешения:</strong></p>
+        <ul>
+            <li>Доступ к сайтам: shikimori.me, shikimori.one</li>
+            <li>Возможность выполнения кросс-доменных запросов к smotret-anime.com</li>
+        </ul>
+    </div>
+    
+    <div class="button-group">
+        <button id="close-button">Закрыть</button>
+        <button id="edit-button">Править</button>
+    </div>
+    
+    <div class="footer">
+        <p>Для работы скрипта требуется расширение для пользовательских скриптов, такое как Tampermonkey или Violentmonkey.</p>
+    </div>
+
+    <script>
+        document.getElementById('install-button').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = document.getElementById('script-link').href;
+        });
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                window.location.href = document.getElementById('script-link').href;
+            }
+        });
+        
+        document.getElementById('close-button').addEventListener('click', function() {
+            // В реальном сценарии здесь может быть закрытие окна
+            alert('Функция закрытия будет работать при интеграции с менеджером пользовательских скриптов');
+        });
+        
+        document.getElementById('edit-button').addEventListener('click', function() {
+            // В реальном сценарии здесь может быть переход к редактированию
+            alert('Функция редактирования будет работать при интеграции с менеджером пользовательских скриптов');
+        });
+    </script>
+</body>
+</html>
