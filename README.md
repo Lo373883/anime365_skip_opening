@@ -6,7 +6,7 @@
 4. Готово
 
 Нажмите на название скрипт, чтобы установить его
-* <a>[anime365_skip_opening](https://github.com/Lo373883/anime365_skip_opening/raw/main/anime_skip_script.user.js)
+* <a>[anime365_skip_opening](https://github.com/Lo373883/anime365_skip_opening/raw/main/anime_skip_script.user.js) - На компьютере можно нажать правой кнопкой и менять время пропуска, на телефоне нужно зажать кнопку
 
 
    ![Анимация](screenshots/103a057f97e696.gif)
