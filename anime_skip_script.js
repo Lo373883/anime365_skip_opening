@@ -1,16 +1,12 @@
 // ==UserScript==
-// @name         Пропуск опенинга на сайте anime365
-// @namespace    http://tampermonkey.net/
-// @version      2
-// @description  Добавляет кнопку пропуска опенинга в видеоплеер с настраиваемым временем
-// @author       ildys2.0
-// @match       https://smotret-anime.org/*
-// @match       https://anime365.ru/*
-// @match       https://anime-365.ru/*
-// @match       https://hentai365.ru/*
-// @match       https://smotret-anime.online/*
-// @match       https://smotret-anime.com/*
+// @name         Anime365 Skip Opening
+// @namespace    https://github.com/Lo373883/
+// @version      1.0
+// @description  Автоматически пропускает заставку на Anime365
+// @author       Lo373883
+// @match        https://smotret-anime.com/*
 // @grant        none
+// @license      MIT
 // ==/UserScript==
 
 (function() {
