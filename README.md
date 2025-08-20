@@ -6,7 +6,7 @@
 4. Готово
 
 Нажмите на название скрипта, чтобы установить его
-* [anime365_skip_opening](https://github.com/Lo373883/anime365_skip_opening/blob/main/anime_skip_script.js)
+* [anime365_skip_opening]<a>(https://github.com/Lo373883/anime365_skip_opening/blob/main/anime_skip_script.js)
 
 
    ![](./screenshots/104047.png)
