@@ -3,8 +3,13 @@
 // @namespace    https://github.com/Lo373883/
 // @version      1.0
 // @description  Автоматически пропускает заставку на Anime365
-// @author       Lo373883
-// @match        https://smotret-anime.com/*
+// @author       ildys2.0
+// @match       https://smotret-anime.org/*
+// @match       https://anime365.ru/*
+// @match       https://anime-365.ru/*
+// @match       https://hentai365.ru/*
+// @match       https://smotret-anime.online/*
+// @match       https://smotret-anime.com/*
 // @grant        none
 // @license      MIT
 // ==/UserScript==
