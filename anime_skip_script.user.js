@@ -16,7 +16,7 @@
     'use strict';
 
     // ===== НАСТРОЙКИ =====
-    const SKIP_OPTIONS = [60, 75, 90, 95, 105, 120, 150];
+    const SKIP_OPTIONS = [60, 75, 80, 90, 95, 105, 120, 150];
     
     // Загружаем сохраненный индекс из localStorage
     let currentSkipIndex = parseInt(localStorage.getItem('anime365_skip_index') || '2');
