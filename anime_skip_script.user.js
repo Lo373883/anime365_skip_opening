@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Anime365 Skip Opening
 // @namespace    https://github.com/Lo373883/
-// @version      1.0
+// @version      1.1
 // @description  Автоматически пропускает заставку на Anime365
 // @author       ildys2.0
 // @match        https://smotret-anime.com/*
@@ -17,7 +17,12 @@
 
     // ===== НАСТРОЙКИ =====
     const SKIP_OPTIONS = [60, 75, 90, 95, 105, 120, 150];
-    let currentSkipIndex = 2;
+    
+    // Загружаем сохраненный индекс из localStorage
+    let currentSkipIndex = parseInt(localStorage.getItem('anime365_skip_index') || '2');
+    // Проверяем, что индекс в допустимых пределах
+    currentSkipIndex = Math.max(0, Math.min(currentSkipIndex, SKIP_OPTIONS.length - 1));
+    
     let SKIP_TIME = SKIP_OPTIONS[currentSkipIndex];
     // =====================
 
@@ -180,6 +185,9 @@
     function changeSkipTime() {
         currentSkipIndex = (currentSkipIndex + 1) % SKIP_OPTIONS.length;
         SKIP_TIME = SKIP_OPTIONS[currentSkipIndex];
+        
+        // Сохраняем выбранный индекс в localStorage
+        localStorage.setItem('anime365_skip_index', currentSkipIndex.toString());
 
         if (skipButton) {
             updateButtonText(skipButton);
