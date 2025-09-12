@@ -414,14 +414,6 @@
         if (isMobileDevice) {
             container.addEventListener('touchstart', showButton);
             container.addEventListener('touchmove', showButton);
-            container.addEventListener('touchend', () => {
-                clearTimeout(hideTimeout);
-                hideTimeout = setTimeout(() => {
-                    if (!isInteracting) {
-                        hideButton();
-                    }
-                }, 1500);
-            });
         }
 
         showButton();
