@@ -5,11 +5,10 @@
 3. Согласиться с установкой
 4. Готово
 
-Нажмите на название скрипта, чтобы установить его:
-* <a>[anime365_skip_opening](https://github.com/Lo373883/anime365_skip_opening/raw/main/anime_skip_script.user.js)
+Нажмите на название скрипта, чтобы установить его: <a>[anime365_skip_opening](https://github.com/Lo373883/anime365_skip_opening/raw/main/anime_skip_script.user.js)
 
 
-  ![Анимация](screenshots/103a057f97e696.gif)
+![Анимация](screenshots/f37c440.gif)
 
 
 Для компьютера:
