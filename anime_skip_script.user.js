@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Anime365 Skip Opening
 // @namespace    https://github.com/Lo373883/
-// @version      1.2
+// @version      1.3
 // @description  Автоматически пропускает заставку на Anime365 (с поддержкой горячих клавиш)
 // @author       ildys2.0
 // @match        https://smotret-anime.com/*
@@ -30,6 +30,7 @@
     let hideTimeout = null;
     let isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     let longPressTimer = null;
+    let isInteracting = false;
 
     function formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
@@ -42,6 +43,10 @@
                  document.webkitFullscreenElement ||
                  document.mozFullScreenElement ||
                  document.msFullscreenElement);
+    }
+
+    function isVerticalMode() {
+        return window.innerHeight > window.innerWidth;
     }
 
     function shouldShowButton() {
@@ -59,17 +64,37 @@
         }
     }
 
+    function getButtonPosition() {
+        const isFullscreen = isFullscreenMode();
+        const isMobileVertical = isMobileDevice && isVerticalMode();
+        
+        if (isMobileVertical) {
+            // В вертикальном режиме на мобильном поднимаем кнопку выше
+            return {
+                bottom: isFullscreen ? '50px' : '45px',
+                left: isFullscreen ? '120px' : '100px'
+            };
+        } else {
+            // В остальных случаях оставляем как было
+            return {
+                bottom: isFullscreen ? '15px' : '10px',
+                left: isFullscreen ? '120px' : '100px'
+            };
+        }
+    }
+
     function createSkipButton() {
         const button = document.createElement('button');
         updateButtonText(button);
         button.setAttribute('data-skip-button', 'true');
 
         const isFullscreen = isFullscreenMode();
+        const position = getButtonPosition();
 
         button.style.cssText = `
             position: absolute !important;
-            bottom: ${isFullscreen ? '60px' : '50px'} !important;
-            left: ${isFullscreen ? '120px' : '100px'} !important;
+            bottom: ${position.bottom} !important;
+            left: ${position.left} !important;
             z-index: 9999 !important;
             background: rgba(255, 255, 255, 0.12) !important;
             color: rgba(255, 255, 255, 0.95) !important;
@@ -133,6 +158,7 @@
             button.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                isInteracting = true;
 
                 // Запускаем таймер для длинного нажатия
                 longPressTimer = setTimeout(() => {
@@ -161,6 +187,11 @@
                     longPressTimer = null;
                     skipOpening();
                 }
+                
+                // Через небольшую задержку сбрасываем флаг взаимодействия
+                setTimeout(() => {
+                    isInteracting = false;
+                }, 100);
             });
 
             button.addEventListener('touchcancel', (e) => {
@@ -171,6 +202,7 @@
                     clearTimeout(longPressTimer);
                     longPressTimer = null;
                 }
+                isInteracting = false;
             });
         }
 
@@ -179,7 +211,19 @@
 
     function updateButtonText(button) {
         const timeText = formatTime(SKIP_TIME);
-        button.innerHTML = `Пропустить (${timeText})`;
+        if (isMobileDevice) {
+            button.innerHTML = `Пропустить (${timeText})`;
+        } else {
+            button.innerHTML = `Пропустить (${timeText}) [>]`;
+        }
+    }
+
+    function updateButtonPosition() {
+        if (!skipButton) return;
+        
+        const position = getButtonPosition();
+        skipButton.style.bottom = position.bottom + ' !important';
+        skipButton.style.left = position.left + ' !important';
     }
 
     function changeSkipTime() {
@@ -196,7 +240,7 @@
 
             clearTimeout(hideTimeout);
             hideTimeout = setTimeout(() => {
-                if (skipButton && !skipButton.matches(':hover')) {
+                if (skipButton && !skipButton.matches(':hover') && !isInteracting) {
                     skipButton.style.opacity = '0';
                     skipButton.style.visibility = 'hidden';
                 }
@@ -242,7 +286,7 @@
                     skipButton.style.visibility = 'visible';
                     clearTimeout(hideTimeout);
                     hideTimeout = setTimeout(() => {
-                        if (skipButton && !skipButton.matches(':hover')) {
+                        if (skipButton && !skipButton.matches(':hover') && !isInteracting) {
                             skipButton.style.opacity = '0';
                             skipButton.style.visibility = 'hidden';
                         }
@@ -334,7 +378,7 @@
         };
 
         const hideButton = () => {
-            if (skipButton && !skipButton.matches(':hover')) {
+            if (skipButton && !skipButton.matches(':hover') && !isInteracting) {
                 skipButton.style.opacity = '0';
                 skipButton.style.visibility = 'hidden';
             }
@@ -372,13 +416,17 @@
             container.addEventListener('touchmove', showButton);
             container.addEventListener('touchend', () => {
                 clearTimeout(hideTimeout);
-                hideTimeout = setTimeout(hideButton, 1500);
+                hideTimeout = setTimeout(() => {
+                    if (!isInteracting) {
+                        hideButton();
+                    }
+                }, 1500);
             });
         }
 
         showButton();
         setTimeout(() => {
-            if (video && !video.paused && !container.matches(':hover')) {
+            if (video && !video.paused && !container.matches(':hover') && !isInteracting) {
                 hideButton();
             }
         }, 2500);
@@ -386,18 +434,36 @@
 
     // изменения полноэкранного режима и ориентации
     function setupFullscreenListener() {
-        document.addEventListener('fullscreenchange', updateButtonVisibility);
-        document.addEventListener('webkitfullscreenchange', updateButtonVisibility);
-        document.addEventListener('mozfullscreenchange', updateButtonVisibility);
-        document.addEventListener('MSFullscreenChange', updateButtonVisibility);
+        document.addEventListener('fullscreenchange', () => {
+            updateButtonVisibility();
+            updateButtonPosition();
+        });
+        document.addEventListener('webkitfullscreenchange', () => {
+            updateButtonVisibility();
+            updateButtonPosition();
+        });
+        document.addEventListener('mozfullscreenchange', () => {
+            updateButtonVisibility();
+            updateButtonPosition();
+        });
+        document.addEventListener('MSFullscreenChange', () => {
+            updateButtonVisibility();
+            updateButtonPosition();
+        });
         
         // Слушаем изменения ориентации на мобильных устройствах
         if (isMobileDevice) {
             window.addEventListener('orientationchange', () => {
-                setTimeout(updateButtonVisibility, 100);
+                setTimeout(() => {
+                    updateButtonVisibility();
+                    updateButtonPosition();
+                }, 100);
             });
             window.addEventListener('resize', () => {
-                setTimeout(updateButtonVisibility, 100);
+                setTimeout(() => {
+                    updateButtonVisibility();
+                    updateButtonPosition();
+                }, 100);
             });
         }
     }
