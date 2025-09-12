@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Anime365 Skip Opening
 // @namespace    https://github.com/Lo373883/
-// @version      1.1
-// @description  Автоматически пропускает заставку на Anime365
+// @version      1.2
+// @description  Автоматически пропускает заставку на Anime365 (с поддержкой горячих клавиш)
 // @author       ildys2.0
 // @match        https://smotret-anime.com/*
 // @match        https://smotret-anime.org/*
@@ -179,7 +179,7 @@
 
     function updateButtonText(button) {
         const timeText = formatTime(SKIP_TIME);
-        button.innerHTML = `Пропустить (${timeText})`;
+        button.innerHTML = `Пропустить (${timeText}) [>]`;
     }
 
     function changeSkipTime() {
@@ -212,6 +212,51 @@
             const newTime = Math.min(currentTime + SKIP_TIME, video.duration || currentTime + SKIP_TIME);
             video.currentTime = newTime;
         }
+    }
+
+    // Обработчик горячих клавиш
+    function setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Игнорируем нажатия клавиш в полях ввода
+            const activeElement = document.activeElement;
+            if (activeElement && 
+                (activeElement.tagName === 'INPUT' || 
+                 activeElement.tagName === 'TEXTAREA' || 
+                 activeElement.contentEditable === 'true')) {
+                return;
+            }
+
+            // Проверяем, что видео существует и находится в фокусе страницы
+            const video = document.querySelector('video');
+            if (!video) return;
+
+            // > или . - пропустить заставку
+            if (e.key === '>' || e.key === '.' || e.code === 'Period') {
+                e.preventDefault();
+                e.stopPropagation();
+                skipOpening();
+                
+                // Показываем кнопку на короткое время для обратной связи
+                if (skipButton && shouldShowButton()) {
+                    skipButton.style.opacity = '1';
+                    skipButton.style.visibility = 'visible';
+                    clearTimeout(hideTimeout);
+                    hideTimeout = setTimeout(() => {
+                        if (skipButton && !skipButton.matches(':hover')) {
+                            skipButton.style.opacity = '0';
+                            skipButton.style.visibility = 'hidden';
+                        }
+                    }, 1500);
+                }
+            }
+            
+            // < или , - изменить время пропуска
+            else if (e.key === '<' || e.key === ',' || e.code === 'Comma') {
+                e.preventDefault();
+                e.stopPropagation();
+                changeSkipTime();
+            }
+        });
     }
 
     function findTimeDisplay() {
@@ -339,7 +384,7 @@
         }, 2500);
     }
 
-    //  изменения полноэкранного режима
+    // изменения полноэкранного режима
     function setupFullscreenListener() {
         document.addEventListener('fullscreenchange', updateButtonVisibility);
         document.addEventListener('webkitfullscreenchange', updateButtonVisibility);
@@ -357,6 +402,7 @@
         }
 
         setupFullscreenListener();
+        setupKeyboardShortcuts(); // Добавляем поддержку горячих клавиш
 
         const observer = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
