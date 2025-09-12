@@ -68,7 +68,7 @@
 
         button.style.cssText = `
             position: absolute !important;
-            bottom: ${isFullscreen ? '15px' : '10px'} !important;
+            bottom: ${isFullscreen ? '60px' : '50px'} !important;
             left: ${isFullscreen ? '120px' : '100px'} !important;
             z-index: 9999 !important;
             background: rgba(255, 255, 255, 0.12) !important;
@@ -174,15 +174,12 @@
             });
         }
 
-        // Добавляем позиционирование после создания
-        setTimeout(() => updateButtonPosition(), 100);
-
         return button;
     }
 
     function updateButtonText(button) {
         const timeText = formatTime(SKIP_TIME);
-        button.innerHTML = `Пропустить (${timeText}) [>]`;
+        button.innerHTML = `Пропустить (${timeText})`;
     }
 
     function changeSkipTime() {
