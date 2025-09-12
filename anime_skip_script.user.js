@@ -99,11 +99,12 @@
             z-index: 99999 !important;
             background: ${backgroundColor} !important;
             color: rgba(255, 255, 255, 0.95) !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8) !important;
             border: 1px solid ${borderColor} !important;
             border-radius: 4px !important;
             padding: 8px 16px !important;
             font-size: ${isFullscreen ? '14px' : '13px'} !important;
-            font-weight: 500 !important;
+            font-weight: 700 !important;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
             white-space: nowrap !important;
             user-select: none !important;
@@ -239,9 +240,9 @@
 
             if (e.button === 0) {
                 if (e.ctrlKey || e.shiftKey || e.altKey) {
-                    changeSkipTime();
+                    changeSkipTime(true); // Показываем уведомление при смене времени
                 } else {
-                    skipOpening();
+                    skipOpening(true); // Показываем уведомление при пропуске
                 }
             }
         });
