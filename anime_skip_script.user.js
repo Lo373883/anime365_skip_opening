@@ -384,12 +384,22 @@
         }, 2500);
     }
 
-    // изменения полноэкранного режима
+    // изменения полноэкранного режима и ориентации
     function setupFullscreenListener() {
         document.addEventListener('fullscreenchange', updateButtonVisibility);
         document.addEventListener('webkitfullscreenchange', updateButtonVisibility);
         document.addEventListener('mozfullscreenchange', updateButtonVisibility);
         document.addEventListener('MSFullscreenChange', updateButtonVisibility);
+        
+        // Слушаем изменения ориентации на мобильных устройствах
+        if (isMobileDevice) {
+            window.addEventListener('orientationchange', () => {
+                setTimeout(updateButtonVisibility, 100);
+            });
+            window.addEventListener('resize', () => {
+                setTimeout(updateButtonVisibility, 100);
+            });
+        }
     }
 
     function init() {
