@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Anime365 Skip Opening
 // @namespace    https://github.com/Lo373883/
-// @version      1.3
+// @version      1.2
 // @description  Автоматически пропускает заставку на Anime365 (с поддержкой горячих клавиш и уведомлениями)
 // @author       ildys2.0
 // @match        https://smotret-anime.com/*
