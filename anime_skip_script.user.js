@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Anime365 Skip Opening
 // @namespace    https://github.com/Lo373883/
-// @version      1.3
+// @version      1.2
 // @description  Автоматически пропускает заставку на Anime365 (с поддержкой горячих клавиш)
 // @author       ildys2.0
 // @match        https://smotret-anime.com/*
@@ -30,7 +30,6 @@
     let hideTimeout = null;
     let isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     let longPressTimer = null;
-    let isInteracting = false;
 
     function formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
@@ -43,10 +42,6 @@
                  document.webkitFullscreenElement ||
                  document.mozFullScreenElement ||
                  document.msFullscreenElement);
-    }
-
-    function isVerticalMode() {
-        return window.innerHeight > window.innerWidth;
     }
 
     function shouldShowButton() {
@@ -64,22 +59,18 @@
         }
     }
 
-    function getButtonPosition() {
-        const isFullscreen = isFullscreenMode();
-        const isMobileVertical = isMobileDevice && isVerticalMode();
-        
-        if (isMobileVertical) {
-            // В вертикальном режиме на мобильном поднимаем кнопку выше
-            return {
-                bottom: isFullscreen ? '50px' : '45px',
-                left: isFullscreen ? '120px' : '100px'
-            };
-        } else {
-            // В остальных случаях оставляем как было
-            return {
-                bottom: isFullscreen ? '15px' : '10px',
-                left: isFullscreen ? '120px' : '100px'
-            };
+    // Функция для показа кнопки при нажатии горячих клавиш
+    function showButtonTemporarily(duration = 2000) {
+        if (skipButton && shouldShowButton()) {
+            skipButton.style.opacity = '1';
+            skipButton.style.visibility = 'visible';
+            clearTimeout(hideTimeout);
+            hideTimeout = setTimeout(() => {
+                if (skipButton && !skipButton.matches(':hover')) {
+                    skipButton.style.opacity = '0';
+                    skipButton.style.visibility = 'hidden';
+                }
+            }, duration);
         }
     }
 
@@ -89,12 +80,11 @@
         button.setAttribute('data-skip-button', 'true');
 
         const isFullscreen = isFullscreenMode();
-        const position = getButtonPosition();
 
         button.style.cssText = `
             position: absolute !important;
-            bottom: ${position.bottom} !important;
-            left: ${position.left} !important;
+            bottom: ${isFullscreen ? '15px' : '10px'} !important;
+            left: ${isFullscreen ? '120px' : '100px'} !important;
             z-index: 9999 !important;
             background: rgba(255, 255, 255, 0.12) !important;
             color: rgba(255, 255, 255, 0.95) !important;
@@ -158,7 +148,6 @@
             button.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                isInteracting = true;
 
                 // Запускаем таймер для длинного нажатия
                 longPressTimer = setTimeout(() => {
@@ -187,11 +176,6 @@
                     longPressTimer = null;
                     skipOpening();
                 }
-                
-                // Через небольшую задержку сбрасываем флаг взаимодействия
-                setTimeout(() => {
-                    isInteracting = false;
-                }, 100);
             });
 
             button.addEventListener('touchcancel', (e) => {
@@ -202,7 +186,6 @@
                     clearTimeout(longPressTimer);
                     longPressTimer = null;
                 }
-                isInteracting = false;
             });
         }
 
@@ -211,19 +194,7 @@
 
     function updateButtonText(button) {
         const timeText = formatTime(SKIP_TIME);
-        if (isMobileDevice) {
-            button.innerHTML = `Пропустить (${timeText})`;
-        } else {
-            button.innerHTML = `Пропустить (${timeText}) [>]`;
-        }
-    }
-
-    function updateButtonPosition() {
-        if (!skipButton) return;
-        
-        const position = getButtonPosition();
-        skipButton.style.bottom = position.bottom + ' !important';
-        skipButton.style.left = position.left + ' !important';
+        button.innerHTML = `Пропустить (${timeText}) [>]`;
     }
 
     function changeSkipTime() {
@@ -235,16 +206,8 @@
 
         if (skipButton) {
             updateButtonText(skipButton);
-            skipButton.style.opacity = '1';
-            skipButton.style.visibility = 'visible';
-
-            clearTimeout(hideTimeout);
-            hideTimeout = setTimeout(() => {
-                if (skipButton && !skipButton.matches(':hover') && !isInteracting) {
-                    skipButton.style.opacity = '0';
-                    skipButton.style.visibility = 'hidden';
-                }
-            }, 2000);
+            // Показываем кнопку при изменении времени
+            showButtonTemporarily(2500);
         }
     }
 
@@ -280,25 +243,15 @@
                 e.stopPropagation();
                 skipOpening();
                 
-                // Показываем кнопку на короткое время для обратной связи
-                if (skipButton && shouldShowButton()) {
-                    skipButton.style.opacity = '1';
-                    skipButton.style.visibility = 'visible';
-                    clearTimeout(hideTimeout);
-                    hideTimeout = setTimeout(() => {
-                        if (skipButton && !skipButton.matches(':hover') && !isInteracting) {
-                            skipButton.style.opacity = '0';
-                            skipButton.style.visibility = 'hidden';
-                        }
-                    }, 1500);
-                }
+                // Показываем кнопку для обратной связи
+                showButtonTemporarily(1500);
             }
             
             // < или , - изменить время пропуска
             else if (e.key === '<' || e.key === ',' || e.code === 'Comma') {
                 e.preventDefault();
                 e.stopPropagation();
-                changeSkipTime();
+                changeSkipTime(); // Функция changeSkipTime уже вызывает showButtonTemporarily
             }
         });
     }
@@ -378,7 +331,7 @@
         };
 
         const hideButton = () => {
-            if (skipButton && !skipButton.matches(':hover') && !isInteracting) {
+            if (skipButton && !skipButton.matches(':hover')) {
                 skipButton.style.opacity = '0';
                 skipButton.style.visibility = 'hidden';
             }
@@ -414,11 +367,15 @@
         if (isMobileDevice) {
             container.addEventListener('touchstart', showButton);
             container.addEventListener('touchmove', showButton);
+            container.addEventListener('touchend', () => {
+                clearTimeout(hideTimeout);
+                hideTimeout = setTimeout(hideButton, 1500);
+            });
         }
 
         showButton();
         setTimeout(() => {
-            if (video && !video.paused && !container.matches(':hover') && !isInteracting) {
+            if (video && !video.paused && !container.matches(':hover')) {
                 hideButton();
             }
         }, 2500);
@@ -426,36 +383,18 @@
 
     // изменения полноэкранного режима и ориентации
     function setupFullscreenListener() {
-        document.addEventListener('fullscreenchange', () => {
-            updateButtonVisibility();
-            updateButtonPosition();
-        });
-        document.addEventListener('webkitfullscreenchange', () => {
-            updateButtonVisibility();
-            updateButtonPosition();
-        });
-        document.addEventListener('mozfullscreenchange', () => {
-            updateButtonVisibility();
-            updateButtonPosition();
-        });
-        document.addEventListener('MSFullscreenChange', () => {
-            updateButtonVisibility();
-            updateButtonPosition();
-        });
+        document.addEventListener('fullscreenchange', updateButtonVisibility);
+        document.addEventListener('webkitfullscreenchange', updateButtonVisibility);
+        document.addEventListener('mozfullscreenchange', updateButtonVisibility);
+        document.addEventListener('MSFullscreenChange', updateButtonVisibility);
         
         // Слушаем изменения ориентации на мобильных устройствах
         if (isMobileDevice) {
             window.addEventListener('orientationchange', () => {
-                setTimeout(() => {
-                    updateButtonVisibility();
-                    updateButtonPosition();
-                }, 100);
+                setTimeout(updateButtonVisibility, 100);
             });
             window.addEventListener('resize', () => {
-                setTimeout(() => {
-                    updateButtonVisibility();
-                    updateButtonPosition();
-                }, 100);
+                setTimeout(updateButtonVisibility, 100);
             });
         }
     }
