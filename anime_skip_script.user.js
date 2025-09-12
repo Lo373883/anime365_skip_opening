@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Anime365 Skip Opening
 // @namespace    https://github.com/Lo373883/
-// @version      1.2
-// @description  Автоматически пропускает заставку на Anime365 (с поддержкой горячих клавиш)
+// @version      1.3
+// @description  Автоматически пропускает заставку на Anime365 (с поддержкой горячих клавиш и уведомлениями)
 // @author       ildys2.0
 // @match        https://smotret-anime.com/*
 // @match        https://smotret-anime.org/*
@@ -30,6 +30,7 @@
     let hideTimeout = null;
     let isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     let longPressTimer = null;
+    let notificationTimeout = null;
 
     function formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
@@ -59,19 +60,127 @@
         }
     }
 
-    // Функция для показа кнопки при нажатии горячих клавиш
-    function showButtonTemporarily(duration = 2000) {
-        if (skipButton && shouldShowButton()) {
-            skipButton.style.opacity = '1';
-            skipButton.style.visibility = 'visible';
-            clearTimeout(hideTimeout);
-            hideTimeout = setTimeout(() => {
-                if (skipButton && !skipButton.matches(':hover')) {
-                    skipButton.style.opacity = '0';
-                    skipButton.style.visibility = 'hidden';
-                }
-            }, duration);
+    function createNotification(message, type = 'info') {
+        // Удаляем предыдущее уведомление если есть
+        const existingNotification = document.querySelector('[data-skip-notification]');
+        if (existingNotification) {
+            existingNotification.remove();
         }
+
+        const notification = document.createElement('div');
+        notification.setAttribute('data-skip-notification', 'true');
+        
+        const isFullscreen = isFullscreenMode();
+        
+        // Используем стиль похожий на кнопку, но с разными оттенками для типов
+        let backgroundColor, borderColor, icon;
+        switch (type) {
+            case 'skip':
+                backgroundColor = 'rgba(76, 175, 80, 0.15)'; // Зеленоватый оттенок, очень прозрачный
+                borderColor = 'rgba(76, 175, 80, 0.4)';
+                icon = '⏭';
+                break;
+            case 'time-change':
+                backgroundColor = 'rgba(33, 150, 243, 0.15)'; // Синеватый оттенок, очень прозрачный
+                borderColor = 'rgba(33, 150, 243, 0.4)';
+                icon = '⏰';
+                break;
+            default:
+                backgroundColor = 'rgba(255, 255, 255, 0.15)'; // Как у кнопки, но чуть прозрачнее
+                borderColor = 'rgba(255, 255, 255, 0.3)';
+                icon = 'ℹ';
+        }
+
+        notification.style.cssText = `
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) scale(0.8) !important;
+            z-index: 99999 !important;
+            background: ${backgroundColor} !important;
+            color: rgba(255, 255, 255, 0.95) !important;
+            border: 1px solid ${borderColor} !important;
+            border-radius: 4px !important;
+            padding: 8px 16px !important;
+            font-size: ${isFullscreen ? '14px' : '13px'} !important;
+            font-weight: 500 !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+            white-space: nowrap !important;
+            user-select: none !important;
+            pointer-events: none !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+            backdrop-filter: blur(3px) !important;
+            -webkit-backdrop-filter: blur(3px) !important;
+            animation: skipNotificationShow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+            text-align: center !important;
+            min-width: 180px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            letter-spacing: 0.2px !important;
+        `;
+
+        notification.innerHTML = `<span style="font-size: 16px; opacity: 0.8;">${icon}</span>${message}`;
+
+        // Добавляем стили анимации если их еще нет
+        if (!document.querySelector('[data-skip-animation-styles]')) {
+            const style = document.createElement('style');
+            style.setAttribute('data-skip-animation-styles', 'true');
+            style.textContent = `
+                @keyframes skipNotificationShow {
+                    0% {
+                        opacity: 0;
+                        transform: translate(-50%, -50%) scale(0.6);
+                    }
+                    50% {
+                        transform: translate(-50%, -50%) scale(1.02);
+                    }
+                    100% {
+                        opacity: 1;
+                        transform: translate(-50%, -50%) scale(1);
+                    }
+                }
+                @keyframes skipNotificationHide {
+                    0% {
+                        opacity: 1;
+                        transform: translate(-50%, -50%) scale(1);
+                    }
+                    100% {
+                        opacity: 0;
+                        transform: translate(-50%, -50%) scale(0.9);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Добавляем в контейнер видео для правильного позиционирования
+        const video = document.querySelector('video');
+        const videoContainer = video ? video.parentElement : null;
+        
+        if (videoContainer) {
+            const computedStyle = getComputedStyle(videoContainer);
+            if (computedStyle.position === 'static') {
+                videoContainer.style.position = 'relative';
+            }
+            videoContainer.appendChild(notification);
+        } else {
+            document.body.appendChild(notification);
+        }
+
+        // Автоматически скрываем уведомление
+        clearTimeout(notificationTimeout);
+        notificationTimeout = setTimeout(() => {
+            if (notification && notification.parentNode) {
+                notification.style.animation = 'skipNotificationHide 0.3s ease-out forwards';
+                setTimeout(() => {
+                    if (notification && notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }
+        }, type === 'time-change' ? 2500 : 2000);
     }
 
     function createSkipButton() {
@@ -197,7 +306,8 @@
         button.innerHTML = `Пропустить (${timeText}) [>]`;
     }
 
-    function changeSkipTime() {
+    function changeSkipTime(showNotification = false) {
+        const oldTime = SKIP_TIME;
         currentSkipIndex = (currentSkipIndex + 1) % SKIP_OPTIONS.length;
         SKIP_TIME = SKIP_OPTIONS[currentSkipIndex];
         
@@ -206,18 +316,43 @@
 
         if (skipButton) {
             updateButtonText(skipButton);
-            // Показываем кнопку при изменении времени
-            showButtonTemporarily(2500);
+            skipButton.style.opacity = '1';
+            skipButton.style.visibility = 'visible';
+
+            clearTimeout(hideTimeout);
+            hideTimeout = setTimeout(() => {
+                if (skipButton && !skipButton.matches(':hover')) {
+                    skipButton.style.opacity = '0';
+                    skipButton.style.visibility = 'hidden';
+                }
+            }, 2000);
+        }
+
+        // Показываем уведомление если запрошено
+        if (showNotification) {
+            const oldTimeText = formatTime(oldTime);
+            const newTimeText = formatTime(SKIP_TIME);
+            createNotification(`Время пропуска: ${oldTimeText} → ${newTimeText}`, 'time-change');
         }
     }
 
-    function skipOpening() {
+    function skipOpening(showNotification = false) {
         let video = document.querySelector('video');
 
         if (video) {
             const currentTime = video.currentTime;
             const newTime = Math.min(currentTime + SKIP_TIME, video.duration || currentTime + SKIP_TIME);
+            const actualSkip = newTime - currentTime;
+            
             video.currentTime = newTime;
+
+            // Показываем уведомление если запрошено
+            if (showNotification && actualSkip > 0) {
+                const skippedText = formatTime(Math.round(actualSkip));
+                const currentTimeText = formatTime(Math.round(currentTime));
+                const newTimeText = formatTime(Math.round(newTime));
+                createNotification(`Пропущено ${skippedText} (${currentTimeText} → ${newTimeText})`, 'skip');
+            }
         }
     }
 
@@ -241,17 +376,27 @@
             if (e.key === '>' || e.key === '.' || e.code === 'Period') {
                 e.preventDefault();
                 e.stopPropagation();
-                skipOpening();
+                skipOpening(true); // Показываем уведомление при использовании горячей клавиши
                 
-                // Показываем кнопку для обратной связи
-                showButtonTemporarily(1500);
+                // Показываем кнопку на короткое время для обратной связи
+                if (skipButton && shouldShowButton()) {
+                    skipButton.style.opacity = '1';
+                    skipButton.style.visibility = 'visible';
+                    clearTimeout(hideTimeout);
+                    hideTimeout = setTimeout(() => {
+                        if (skipButton && !skipButton.matches(':hover')) {
+                            skipButton.style.opacity = '0';
+                            skipButton.style.visibility = 'hidden';
+                        }
+                    }, 1500);
+                }
             }
             
             // < или , - изменить время пропуска
             else if (e.key === '<' || e.key === ',' || e.code === 'Comma') {
                 e.preventDefault();
                 e.stopPropagation();
-                changeSkipTime(); // Функция changeSkipTime уже вызывает showButtonTemporarily
+                changeSkipTime(true); // Показываем уведомление при использовании горячей клавиши
             }
         });
     }
@@ -320,12 +465,11 @@
         return false;
     }
 
-    function setupAutoHide(container, video) {
+    function setupAutoHide(container) {
         const showButton = () => {
             if (skipButton && shouldShowButton()) {
                 skipButton.style.opacity = '1';
                 skipButton.style.visibility = 'visible';
-                skipButton.style.display = 'inline-block';
                 clearTimeout(hideTimeout);
                 hideTimeout = setTimeout(hideButton, 3500);
             }
@@ -338,6 +482,7 @@
             }
         };
 
+        const video = document.querySelector('video');
         if (video) {
             video.addEventListener('play', showButton);
             video.addEventListener('pause', showButton);
@@ -354,51 +499,20 @@
             }
         }
 
-        // Добавляем обработчики для всего документа, чтобы кнопка показывалась при движении мыши в области видео
         if (!isMobileDevice) {
-            document.addEventListener('mousemove', (e) => {
-                // Проверяем, находится ли курсор в области видео
-                if (video) {
-                    const rect = video.getBoundingClientRect();
-                    if (e.clientX >= rect.left && e.clientX <= rect.right && 
-                        e.clientY >= rect.top && e.clientY <= rect.bottom) {
-                        showButton();
-                    }
-                }
-            });
-
-            document.addEventListener('mouseleave', () => {
+            container.addEventListener('mouseenter', showButton);
+            container.addEventListener('mousemove', showButton);
+            container.addEventListener('mouseleave', () => {
                 clearTimeout(hideTimeout);
                 hideTimeout = setTimeout(hideButton, 1500);
             });
         }
 
-        // Для мобильных устройств показываем кнопку при касании экрана
+        // Для мобильных устройств показываем кнопку при касании
         if (isMobileDevice) {
-            document.addEventListener('touchstart', (e) => {
-                // Проверяем, было ли касание в области видео
-                if (video) {
-                    const rect = video.getBoundingClientRect();
-                    const touch = e.touches[0];
-                    if (touch.clientX >= rect.left && touch.clientX <= rect.right && 
-                        touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
-                        showButton();
-                    }
-                }
-            });
-            
-            document.addEventListener('touchmove', (e) => {
-                if (video) {
-                    const rect = video.getBoundingClientRect();
-                    const touch = e.touches[0];
-                    if (touch.clientX >= rect.left && touch.clientX <= rect.right && 
-                        touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
-                        showButton();
-                    }
-                }
-            });
-            
-            document.addEventListener('touchend', () => {
+            container.addEventListener('touchstart', showButton);
+            container.addEventListener('touchmove', showButton);
+            container.addEventListener('touchend', () => {
                 clearTimeout(hideTimeout);
                 hideTimeout = setTimeout(hideButton, 1500);
             });
@@ -406,7 +520,7 @@
 
         showButton();
         setTimeout(() => {
-            if (video && !video.paused) {
+            if (video && !video.paused && !container.matches(':hover')) {
                 hideButton();
             }
         }, 2500);
