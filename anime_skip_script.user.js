@@ -320,11 +320,12 @@
         return false;
     }
 
-    function setupAutoHide(container) {
+    function setupAutoHide(container, video) {
         const showButton = () => {
             if (skipButton && shouldShowButton()) {
                 skipButton.style.opacity = '1';
                 skipButton.style.visibility = 'visible';
+                skipButton.style.display = 'inline-block';
                 clearTimeout(hideTimeout);
                 hideTimeout = setTimeout(hideButton, 3500);
             }
@@ -337,7 +338,6 @@
             }
         };
 
-        const video = document.querySelector('video');
         if (video) {
             video.addEventListener('play', showButton);
             video.addEventListener('pause', showButton);
@@ -354,20 +354,51 @@
             }
         }
 
+        // Добавляем обработчики для всего документа, чтобы кнопка показывалась при движении мыши в области видео
         if (!isMobileDevice) {
-            container.addEventListener('mouseenter', showButton);
-            container.addEventListener('mousemove', showButton);
-            container.addEventListener('mouseleave', () => {
+            document.addEventListener('mousemove', (e) => {
+                // Проверяем, находится ли курсор в области видео
+                if (video) {
+                    const rect = video.getBoundingClientRect();
+                    if (e.clientX >= rect.left && e.clientX <= rect.right && 
+                        e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                        showButton();
+                    }
+                }
+            });
+
+            document.addEventListener('mouseleave', () => {
                 clearTimeout(hideTimeout);
                 hideTimeout = setTimeout(hideButton, 1500);
             });
         }
 
-        // Для мобильных устройств показываем кнопку при касании
+        // Для мобильных устройств показываем кнопку при касании экрана
         if (isMobileDevice) {
-            container.addEventListener('touchstart', showButton);
-            container.addEventListener('touchmove', showButton);
-            container.addEventListener('touchend', () => {
+            document.addEventListener('touchstart', (e) => {
+                // Проверяем, было ли касание в области видео
+                if (video) {
+                    const rect = video.getBoundingClientRect();
+                    const touch = e.touches[0];
+                    if (touch.clientX >= rect.left && touch.clientX <= rect.right && 
+                        touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                        showButton();
+                    }
+                }
+            });
+            
+            document.addEventListener('touchmove', (e) => {
+                if (video) {
+                    const rect = video.getBoundingClientRect();
+                    const touch = e.touches[0];
+                    if (touch.clientX >= rect.left && touch.clientX <= rect.right && 
+                        touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                        showButton();
+                    }
+                }
+            });
+            
+            document.addEventListener('touchend', () => {
                 clearTimeout(hideTimeout);
                 hideTimeout = setTimeout(hideButton, 1500);
             });
@@ -375,7 +406,7 @@
 
         showButton();
         setTimeout(() => {
-            if (video && !video.paused && !container.matches(':hover')) {
+            if (video && !video.paused) {
                 hideButton();
             }
         }, 2500);
