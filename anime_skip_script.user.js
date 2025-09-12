@@ -174,6 +174,9 @@
             });
         }
 
+        // Добавляем позиционирование после создания
+        setTimeout(() => updateButtonPosition(), 100);
+
         return button;
     }
 
