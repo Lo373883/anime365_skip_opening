@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Anime365 Skip Opening
 // @namespace    https://github.com/Lo373883/
-// @version      1.2
+// @version      1.3
 // @description  Автоматически пропускает заставку на Anime365 (с поддержкой горячих клавиш и уведомлениями)
 // @author       ildys2.0
 // @match        https://smotret-anime.com/*
@@ -240,7 +240,7 @@
 
             if (e.button === 0) {
                 if (e.ctrlKey || e.shiftKey || e.altKey) {
-                    changeSkipTime(true); // Показываем уведомление при смене времени
+                    changeSkipTime(1, true); // Показываем уведомление при смене времени
                 } else {
                     skipOpening(true); // Показываем уведомление при пропуске
                 }
@@ -250,7 +250,7 @@
         button.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            changeSkipTime();
+            changeSkipTime(1);
         });
 
         // Для мобильных устройств добавляем обработчики touch
@@ -261,7 +261,7 @@
 
                 // Запускаем таймер для длинного нажатия
                 longPressTimer = setTimeout(() => {
-                    changeSkipTime();
+                    changeSkipTime(1);
                     longPressTimer = null;
                 }, 500); // 500ms для длинного нажатия
             });
@@ -304,12 +304,19 @@
 
     function updateButtonText(button) {
         const timeText = formatTime(SKIP_TIME);
-        button.innerHTML = `Пропустить (${timeText}) [>]`;
+        button.innerHTML = `Пропустить (${timeText})`;
     }
 
-    function changeSkipTime(showNotification = false) {
+    function changeSkipTime(direction = 1, showNotification = false) {
         const oldTime = SKIP_TIME;
-        currentSkipIndex = (currentSkipIndex + 1) % SKIP_OPTIONS.length;
+        
+        // direction: 1 для увеличения, -1 для уменьшения
+        if (direction > 0) {
+            currentSkipIndex = (currentSkipIndex + 1) % SKIP_OPTIONS.length;
+        } else {
+            currentSkipIndex = (currentSkipIndex - 1 + SKIP_OPTIONS.length) % SKIP_OPTIONS.length;
+        }
+        
         SKIP_TIME = SKIP_OPTIONS[currentSkipIndex];
         
         // Сохраняем выбранный индекс в localStorage
@@ -333,7 +340,8 @@
         if (showNotification) {
             const oldTimeText = formatTime(oldTime);
             const newTimeText = formatTime(SKIP_TIME);
-            createNotification(`Время пропуска: ${oldTimeText} → ${newTimeText}`, 'time-change');
+            const arrow = direction > 0 ? '→' : '←';
+            createNotification(`Время пропуска: ${oldTimeText} ${arrow} ${newTimeText}`, 'time-change');
         }
     }
 
@@ -373,8 +381,8 @@
             const video = document.querySelector('video');
             if (!video) return;
 
-            // > или . - пропустить заставку
-            if (e.key === '>' || e.key === '.' || e.code === 'Period') {
+            // / - пропустить заставку
+            if (e.key === '/' || e.code === 'Slash') {
                 e.preventDefault();
                 e.stopPropagation();
                 skipOpening(true); // Показываем уведомление при использовании горячей клавиши
@@ -393,11 +401,18 @@
                 }
             }
             
-            // < или , - изменить время пропуска
+            // > или . - увеличить время пропуска
+            else if (e.key === '>' || e.key === '.' || e.code === 'Period') {
+                e.preventDefault();
+                e.stopPropagation();
+                changeSkipTime(1, true); // Показываем уведомление при использовании горячей клавиши
+            }
+            
+            // < или , - уменьшить время пропуска  
             else if (e.key === '<' || e.key === ',' || e.code === 'Comma') {
                 e.preventDefault();
                 e.stopPropagation();
-                changeSkipTime(true); // Показываем уведомление при использовании горячей клавиши
+                changeSkipTime(-1, true); // Показываем уведомление при использовании горячей клавиши
             }
         });
     }
